@@ -7,21 +7,31 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
-import { CategoryService } from '../services/category.service';
+import { TagService } from '../services/tag.service';
 import { errorResponse, successResponse } from 'src/utils/response-formatter';
-import { CreateCategoryDto } from '../payload/category/create-category-dto';
-import { UpdateCategoryDto } from '../payload/category/update-category-dto';
+import { CreateTagDto } from '../payload/tag/create-tag-dto';
+import { UpdateTagDto } from '../payload/tag/update-tag-dto';
 
-@Controller('master/categories')
-export class CategoryControllerController {
-  constructor(private readonly categoryService: CategoryService) {}
+@Controller('master/tags')
+export class TagController {
+  constructor(private readonly tagService: TagService) {}
 
   @Get()
-  async findAll() {
+  async findAll(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+    @Query('search') search: string = '',
+  ) {
     try {
-      const data = await this.categoryService.findAll();
-      return successResponse('Successfully get categories', data);
+      const response = await this.tagService.findAll(page, limit, search);
+      return successResponse('Successfully get tags', response.data, {
+        currentPage: response.page,
+        totalPage: response.totalPage,
+        size: response.limit,
+        totalData: response.total,
+      });
     } catch (e: unknown) {
       const errorMessage =
         e instanceof Error ? e.message : 'An unexpected error occurred';
@@ -33,8 +43,8 @@ export class CategoryControllerController {
   @Get(':id')
   async findById(@Param('id', new ParseIntPipe()) id: number) {
     try {
-      const data = await this.categoryService.findById(id);
-      return successResponse('Successfully get category', data);
+      const response = await this.tagService.findById(id);
+      return successResponse('Successfully get tags', response);
     } catch (e: unknown) {
       const errorMessage =
         e instanceof Error ? e.message : 'An unexpected error occurred';
@@ -44,10 +54,10 @@ export class CategoryControllerController {
   }
 
   @Post()
-  async create(@Body() createCategoryDto: CreateCategoryDto) {
+  async create(@Body() createTagDto: CreateTagDto) {
     try {
-      const data = await this.categoryService.create(createCategoryDto);
-      return successResponse('Successfully create category', data);
+      const response = await this.tagService.create(createTagDto);
+      return successResponse('Successfully create tags', response);
     } catch (e: unknown) {
       const errorMessage =
         e instanceof Error ? e.message : 'An unexpected error occurred';
@@ -59,11 +69,11 @@ export class CategoryControllerController {
   @Patch(':id')
   async update(
     @Param('id', new ParseIntPipe()) id: number,
-    @Body() updateCategoryDto: UpdateCategoryDto,
+    @Body() updateTagDto: UpdateTagDto,
   ) {
     try {
-      const data = await this.categoryService.update(id, updateCategoryDto);
-      return successResponse('Successfully update category', data);
+      const response = await this.tagService.update(id, updateTagDto);
+      return successResponse('Successfully update tags', response);
     } catch (e: unknown) {
       const errorMessage =
         e instanceof Error ? e.message : 'An unexpected error occurred';
@@ -75,8 +85,8 @@ export class CategoryControllerController {
   @Delete(':id')
   async delete(@Param('id', new ParseIntPipe()) id: number) {
     try {
-      await this.categoryService.delete(id);
-      return successResponse('Successfully delete category', null);
+      await this.tagService.delete(id);
+      return successResponse('Successfully delete tags', null);
     } catch (e: unknown) {
       const errorMessage =
         e instanceof Error ? e.message : 'An unexpected error occurred';
